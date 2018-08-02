@@ -1,7 +1,7 @@
 use chrono::naive::{NaiveDate, NaiveDateTime};
 use schema::records;
 
-#[derive(Queryable, Insertable)]
+#[derive(Debug, Queryable, Insertable)]
 #[table_name = "records"]
 pub struct Record {
     pub id: u64,

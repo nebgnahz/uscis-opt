@@ -17,7 +17,8 @@ use reqwest::Error;
 use scraper::{Html, Selector};
 
 fn main() {
-    let records = crawl_range(1890220002, 1890220003).unwrap();
+    let records = crawl_range(1890225000, 1890226000).unwrap();
+    // println!("{:?}", records);
     let conn = uscis::establish_connection();
     insert_entry(&conn, &records);
 }
@@ -71,7 +72,11 @@ fn crawl_single(id: i32) -> Result<Option<Record>, Error> {
         id
     );
 
-    let body = reqwest::get(&uri)?.text()?;
+    let client = reqwest::Client::builder()
+        .proxy(reqwest::Proxy::all("http://localhost:8888")?)
+        .build()?;
+    let body = client.get(&uri).send()?.text()?;
+
     let document = Html::parse_document(&body);
     let title = Selector::parse("div.appointment-sec div.text-center h1").unwrap();
     let description = Selector::parse("div.appointment-sec div.text-center p").unwrap();
