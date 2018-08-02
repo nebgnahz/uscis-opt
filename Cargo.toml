@@ -1,0 +1,9 @@
+[package]
+name = "uscis"
+version = "0.1.0"
+authors = ["Ben Zhang <benzh@cs.berkeley.edu>"]
+
+[dependencies]
+reqwest = "0.8.6"
+scraper = "0.7"
+rayon = "1.0"
