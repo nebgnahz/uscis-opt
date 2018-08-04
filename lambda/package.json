@@ -1,0 +1,17 @@
+{
+  "name": "lambda",
+  "version": "0.1.0",
+  "description": "",
+  "main": "lib/index.js",
+  "author": "Ben Zhang <benzh@cs.berkeley.edu>",
+  "license": "MIT",
+  "dependencies": {
+    "neon-cli": "^0.2.0"
+  },
+  "scripts": {
+    "install": "neon build",
+    "zip": "zip -r deployment.zip * -x *.zip *.json *.log",
+    "deploy":
+      "aws lambda update-function-code --function-name arn:aws:lambda:us-east-1:891955726763:function:uscis --zip-file fileb://deployment.zip"
+  }
+}
