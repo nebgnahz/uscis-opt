@@ -11,7 +11,7 @@ mod proxy;
 pub use proxy::read_proxy;
 
 mod crawl;
-pub use crawl::crawl;
+pub use crawl::{crawl, Record};
 
 pub mod pending;
 pub mod status;

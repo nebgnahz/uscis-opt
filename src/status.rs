@@ -1,4 +1,5 @@
-use chrono::naive::{NaiveDate, NaiveDateTime};
+use chrono::naive::NaiveDate;
+use crawl::Record;
 use csv;
 use std::collections::BTreeMap;
 use std::fs;
@@ -28,7 +29,7 @@ pub struct Status {
     pub rfe: Option<NaiveDate>,
     pub update: Option<NaiveDate>,
     pub other: Option<NaiveDate>,
-    pub crawl_time: Option<NaiveDateTime>,
+    pub last_update: Option<NaiveDate>,
 }
 
 impl Status {
@@ -44,7 +45,7 @@ impl Status {
             rfe: None,
             update: None,
             other: None,
-            crawl_time: None,
+            last_update: None,
         }
     }
 
@@ -60,6 +61,11 @@ impl Status {
             UPDATE => self.update = Some(date),
             RFE => self.rfe = Some(date),
             _ => self.other = Some(date),
+        }
+
+        if self.last_update.is_some() && date == self.last_update.unwrap() {
+        } else {
+            self.last_update = Some(date);
         }
     }
 }
@@ -85,9 +91,10 @@ impl AllStatus {
         })
     }
 
-    pub fn update(&mut self, id: u64, status: &str, date: NaiveDate) {
+    pub fn update(&mut self, record: Record) {
+        let id = record.id;
         let entry = self.statuses.entry(id).or_insert(Status::new(id));
-        entry.update(status, date);
+        entry.update(&record.title, record.update_date)
     }
 
     pub fn commit(&self) -> Result<(), io::Error> {

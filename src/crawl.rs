@@ -5,7 +5,7 @@ use scraper::{Html, Selector};
 
 #[derive(Debug)]
 pub struct Record {
-    pub id: u32,
+    pub id: u64,
     pub title: String,
     // pub description: String,
     pub update_date: NaiveDate,
@@ -15,7 +15,7 @@ pub struct Record {
 const EGOV_URL: &'static str = "https://egov.uscis.gov/casestatus/mycasestatus.do?appReceiptNum=";
 const PREFIX: &'static str = "YSC";
 
-pub fn crawl(id: u32, proxy: &str) -> Result<Record, Error> {
+pub fn crawl(id: u64, proxy: &str) -> Result<Record, Error> {
     let uri = format!("{}{}{}", EGOV_URL, PREFIX, id);
     let proxy = format!("http://{}", proxy);
     let client = reqwest::Client::builder()
