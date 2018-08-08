@@ -91,7 +91,7 @@ impl AllStatus {
         })
     }
 
-    pub fn update(&mut self, record: Record) {
+    pub fn update(&mut self, record: &Record) {
         let id = record.id;
         let entry = self.statuses.entry(id).or_insert(Status::new(id));
         entry.update(&record.title, record.update_date)

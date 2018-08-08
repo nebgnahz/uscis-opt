@@ -8,6 +8,9 @@ fn main() {
     let proxy_file = format!("{}/{}", env!("CARGO_MANIFEST_DIR"), "proxy-list");
     let proxies = uscis::read_proxy(proxy_file);
 
+    let pending_file = format!("{}/{}", env!("CARGO_MANIFEST_DIR"), "data/pending.txt");
+    let mut pendings = uscis::pending::Pending::new(pending_file).unwrap();
+
     let status = format!("{}/{}", env!("CARGO_MANIFEST_DIR"), "data/status.csv");
     let mut statuses = uscis::status::AllStatus::new(status).unwrap();
     // for i in 1890230101..1890230110 {
@@ -20,22 +23,26 @@ fn main() {
         .num_threads(proxy_len)
         .build_global()
         .unwrap();
-    let tasks: Vec<u64> = (1890230550..1890230650).collect();
-    let records: Vec<uscis::Record> = tasks
+
+    let records: Vec<uscis::Record> = pendings
+        .ids
         .par_iter()
         .map(|&i| uscis::crawl(i, &proxies[i as usize % proxy_len]))
         .filter_map(|r| r.ok())
         .collect();
 
     for r in records {
-        statuses.update(r);
+        statuses.update(&r);
+        if r.title == "Card Was Delivered To Me By The Post Office" {
+            pendings.remove(r.id);
+        }
     }
+    pendings.grow();
+    pendings.commit().expect("failed to commit pending");
     statuses.commit().expect("failed to update status CSV");
 }
 
 fn _test() {
-    let pending_file = format!("{}/{}", env!("CARGO_MANIFEST_DIR"), "data/pending.txt");
-    let mut pendings = uscis::pending::Pending::new(pending_file).unwrap();
     // pendings.swap(vec![1890230606, 1890230608]);
     // pendings.grow();
     // pendings.commit().expect("failed to update pending file");

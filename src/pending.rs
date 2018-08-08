@@ -1,5 +1,6 @@
 //! Manage a file that contains a list of pending ids.
 
+use std::collections::BTreeSet;
 use std::fs::{self, File};
 use std::io::{self, BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
@@ -7,10 +8,10 @@ use std::path::{Path, PathBuf};
 #[derive(Debug)]
 pub struct Pending {
     filename: PathBuf,
-    ids: Vec<u32>,
+    pub ids: BTreeSet<u64>,
 }
 
-const DELTA: u32 = 1000;
+const DELTA: u64 = 1000;
 const MAX_PENDING: usize = 10000;
 
 impl Pending {
@@ -21,7 +22,7 @@ impl Pending {
         let ids = reader
             .lines()
             .filter_map(|x| x.ok())
-            .filter_map(|x| x.parse::<u32>().ok())
+            .filter_map(|x| x.parse::<u64>().ok())
             .collect();
         Ok(Pending {
             filename: filename,
@@ -43,8 +44,8 @@ impl Pending {
         fs::rename(tmp, &self.filename)
     }
 
-    pub fn swap(&mut self, ids: Vec<u32>) {
-        self.ids = ids;
+    pub fn remove(&mut self, id: u64) {
+        self.ids.remove(&id);
     }
 
     pub fn grow(&mut self) {
