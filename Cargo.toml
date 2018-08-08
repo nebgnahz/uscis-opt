@@ -7,6 +7,7 @@ authors = ["Ben Zhang <benzh@cs.berkeley.edu>"]
 reqwest = "0.8.6"
 scraper = "0.7"
 rayon = "1.0"
-diesel = { version = "1.0.0", features = ["mysql", "chrono"] }
-dotenv = "0.9.0"
-chrono = "0.4.5"
+chrono = { version = "0.4", features = ["serde"] }
+serde = "1.0"
+serde_derive = "1.0"
+csv = "1"
