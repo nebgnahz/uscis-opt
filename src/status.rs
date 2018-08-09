@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
+use INCREMENT;
 
 const RECEIVED: &'static str = "Case Was Received";
 const PRODUCED: &'static str = "New Card Is Being Produced";
@@ -71,24 +72,34 @@ impl Status {
 }
 
 #[derive(Debug)]
-pub struct AllStatus {
+pub struct Statuses {
     filename: PathBuf,
     statuses: BTreeMap<u64, Status>,
 }
 
-impl AllStatus {
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, io::Error> {
+impl Statuses {
+    pub fn new<P: AsRef<Path>>(path: P, range: u64) -> Result<Self, io::Error> {
         let filename = path.as_ref().to_path_buf();
-        let mut rdr = csv::Reader::from_path(path)?;
-        let statuses: BTreeMap<u64, Status> = rdr
-            .deserialize()
-            .map(|r: Result<Status, csv::Error>| r.unwrap())
-            .map(|r| (r.id, r))
-            .collect();
-        Ok(AllStatus {
-            filename: filename,
-            statuses: statuses,
-        })
+        if let Ok(mut rdr) = csv::Reader::from_path(path) {
+            let statuses: BTreeMap<u64, Status> = rdr
+                .deserialize()
+                .map(|r: Result<Status, csv::Error>| r.unwrap())
+                .map(|r| (r.id, r))
+                .collect();
+            Ok(Statuses {
+                filename: filename,
+                statuses: statuses,
+            })
+        } else {
+            let statuses: BTreeMap<u64, Status> = ((range / INCREMENT * INCREMENT)
+                ..((range / INCREMENT + 1) * INCREMENT))
+                .map(|i| (i, Status::new(i)))
+                .collect();
+            Ok(Statuses {
+                filename: filename,
+                statuses: statuses,
+            })
+        }
     }
 
     pub fn update(&mut self, record: &Record) {

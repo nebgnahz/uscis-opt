@@ -1,58 +1,98 @@
 //! Manage a file that contains a list of pending ids.
 
-use std::collections::BTreeSet;
-use std::fs::{self, File};
-use std::io::{self, BufRead, BufReader, BufWriter, Write};
+use chrono;
+use chrono::naive::NaiveDate;
+use csv;
+use std::collections::BTreeMap;
+use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
+use INCREMENT;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PendingEntry {
+    pub id: u64,
+    pub done: bool,
+    pub i765: bool,
+    pub last_crawl: NaiveDate,
+}
+
+impl PendingEntry {
+    pub fn new(i: u64) -> Self {
+        PendingEntry {
+            id: i,
+            done: false,
+            i765: true,
+            last_crawl: NaiveDate::from_ymd(2008, 8, 8),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct Pending {
     filename: PathBuf,
-    pub ids: BTreeSet<u64>,
+    pendings: BTreeMap<u64, PendingEntry>,
 }
 
-const DELTA: u64 = 1000;
-const MAX_PENDING: usize = 10000;
-
 impl Pending {
-    pub fn new<P: AsRef<Path>>(filename: P) -> Result<Self, io::Error> {
+    pub fn new<P: AsRef<Path>>(filename: P, range: u64) -> Result<Self, io::Error> {
         let filename = filename.as_ref().to_path_buf();
-        let f = File::open(&filename).expect("file not found");
-        let reader = BufReader::new(&f);
-        let ids = reader
-            .lines()
-            .filter_map(|x| x.ok())
-            .filter_map(|x| x.parse::<u64>().ok())
-            .collect();
-        Ok(Pending {
-            filename: filename,
-            ids: ids,
-        })
+
+        if let Ok(mut rdr) = csv::Reader::from_path(&filename) {
+            let pendings: BTreeMap<u64, PendingEntry> = rdr
+                .deserialize()
+                .map(|r: Result<PendingEntry, csv::Error>| r.unwrap())
+                .map(|r| (r.id, r))
+                .collect();
+            Ok(Pending {
+                filename: filename,
+                pendings: pendings,
+            })
+        } else {
+            let pendings: BTreeMap<u64, PendingEntry> = ((range / INCREMENT * INCREMENT)
+                ..((range / INCREMENT + 1) * INCREMENT))
+                .map(|i| (i, PendingEntry::new(i)))
+                .collect();
+            Ok(Pending {
+                filename: filename,
+                pendings: pendings,
+            })
+        }
     }
 
     pub fn commit(&self) -> Result<(), io::Error> {
         let tmp = self.filename.with_extension("tmp");
 
         {
-            let tmpfile = File::create(&tmp)?;
-            let mut writer = BufWriter::new(&tmpfile);
-            for id in &self.ids {
-                writeln!(writer, "{}", id).unwrap();
+            let mut wtr = csv::Writer::from_path(&tmp)?;
+
+            for s in &self.pendings {
+                wtr.serialize(s.1)?
             }
         }
 
         fs::rename(tmp, &self.filename)
     }
 
-    pub fn remove(&mut self, id: u64) {
-        self.ids.remove(&id);
+    pub fn set_done(&mut self, id: u64) {
+        self.pendings.get_mut(&id).unwrap().done = true;
     }
 
-    pub fn grow(&mut self) {
-        if self.ids.len() < MAX_PENDING {
-            let max = self.ids.iter().max().unwrap().clone();
-            let _end = max + DELTA;
-            self.ids.extend((max + 1)..(max + DELTA));
-        }
+    pub fn set_non_i765(&mut self, id: u64) {
+        self.pendings.get_mut(&id).unwrap().i765 = false;
+    }
+
+    pub fn set_crawl(&mut self, id: u64, crawl: NaiveDate) {
+        self.pendings.get_mut(&id).unwrap().last_crawl = crawl;
+    }
+
+    pub fn tasks(&self) -> Vec<u64> {
+        let today = chrono::Utc::now().naive_utc().date();
+
+        self.pendings
+            .iter()
+            .filter(|(_k, v)| v.i765 && !v.done && (today - v.last_crawl).num_days() >= 1)
+            .map(|(k, _v)| *k)
+            .collect()
     }
 }

@@ -11,3 +11,5 @@ chrono = { version = "0.4", features = ["serde"] }
 serde = "1.0"
 serde_derive = "1.0"
 csv = "1"
+log = "0.4"
+env_logger = "0.5.12"
