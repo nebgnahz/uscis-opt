@@ -1,6 +1,6 @@
 #[macro_use]
 extern crate log;
-
+extern crate serde_json;
 extern crate chrono;
 extern crate rayon;
 extern crate reqwest;
@@ -16,8 +16,6 @@ mod proxy;
 pub use proxy::read_proxy;
 pub use proxy::write_proxy;
 
-mod crawl;
-pub use crawl::{crawl, Record};
+pub mod crawl2;
 
-pub mod pending;
 pub mod status;

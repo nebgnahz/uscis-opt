@@ -1,5 +1,6 @@
+use chrono;
 use chrono::naive::NaiveDate;
-use crawl::Record;
+use crawl2::Record;
 use csv;
 use std::collections::BTreeMap;
 use std::fs;
@@ -22,21 +23,26 @@ const RFE: &'static str = "Request for Initial Evidence Was Mailed";
 pub struct Status {
     pub id: u64,
     pub received: Option<NaiveDate>,
+    pub delivered: Option<NaiveDate>,
     pub produced: Option<NaiveDate>,
     pub mailed: Option<NaiveDate>,
-    pub delivered: Option<NaiveDate>,
     pub returned: Option<NaiveDate>,
     pub rejected: Option<NaiveDate>,
     pub rfe: Option<NaiveDate>,
     pub update: Option<NaiveDate>,
     pub other: Option<NaiveDate>,
     pub last_update: Option<NaiveDate>,
+    pub last_crawl: Option<NaiveDate>,
+    pub is_done: bool,
+    pub is_i765: bool,
 }
 
 impl Status {
     pub fn new(id: u64) -> Self {
         Status {
             id: id,
+            is_done: false,
+            is_i765: true,
             received: None,
             produced: None,
             mailed: None,
@@ -47,11 +53,14 @@ impl Status {
             update: None,
             other: None,
             last_update: None,
+            last_crawl: None,
         }
     }
 
-    pub fn update(&mut self, status: &str, date: NaiveDate) {
-        match status {
+    pub fn update(&mut self, title: &str, description: &str) {
+        let date = parse_date(description).unwrap();
+
+        match title {
             RECEIVED => self.received = Some(date),
             PRODUCED => self.produced = Some(date),
             MAILED => self.mailed = Some(date),
@@ -63,6 +72,15 @@ impl Status {
             RFE => self.rfe = Some(date),
             _ => self.other = Some(date),
         }
+
+        if title == DELIVERED {
+            self.is_done = true;
+        }
+
+        let today = chrono::Utc::now().naive_utc().date();
+        self.last_crawl = Some(today);
+
+        self.is_i765 = !is_i130(&description);
 
         if self.last_update.is_some() && date == self.last_update.unwrap() {
         } else {
@@ -78,6 +96,7 @@ pub struct Statuses {
 }
 
 impl Statuses {
+    /// If there is such file, we read it; otherwise, we create it.
     pub fn new<P: AsRef<Path>>(path: P, range: u64) -> Result<Self, io::Error> {
         let filename = path.as_ref().to_path_buf();
         if let Ok(mut rdr) = csv::Reader::from_path(path) {
@@ -103,9 +122,9 @@ impl Statuses {
     }
 
     pub fn update(&mut self, record: &Record) {
-        let id = record.id;
+        let id = record.id[3..].parse::<u64>().unwrap();
         let entry = self.statuses.entry(id).or_insert(Status::new(id));
-        entry.update(&record.title, record.update_date)
+        entry.update(&record.title, &record.description)
     }
 
     pub fn commit(&self) -> Result<(), io::Error> {
@@ -119,6 +138,34 @@ impl Statuses {
             }
         }
 
-        fs::rename(tmp, &self.filename)
+        fs::rename(tmp, &self.filename)?;
+
+        let crawl_time = chrono::Utc::now().naive_utc();
+        let crawl_info = self.filename.with_extension(format!("{:?}", crawl_time));
+        fs::File::create(crawl_info)?;
+
+        Ok(())
     }
+}
+
+pub fn is_i130(description: &str) -> bool {
+    description.find("I-130").is_some()
+}
+
+/// Assuming the input has the form "On <Month> <Day>, <Year>, xxx".
+pub fn parse_date(description: &str) -> Result<NaiveDate, chrono::ParseError> {
+    let date = &description[3..]
+        .split(',')
+        .take(2)
+        .collect::<Vec<&str>>()
+        .join(",");
+    chrono::naive::NaiveDate::parse_from_str(date, "%B %d, %Y")
+}
+
+#[test]
+fn test_parse() {
+    let test = "On July 19, 2018, we mailed your new card";
+    let parsed = parse_date(&test);
+    assert!(parsed.is_ok());
+    assert_eq!(NaiveDate::from_ymd(2018, 7, 19), parsed.unwrap());
 }
