@@ -4,7 +4,7 @@ use crawl2::Record;
 use csv;
 use std::collections::BTreeMap;
 use std::fs;
-use std::io;
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use INCREMENT;
 
@@ -144,9 +144,10 @@ impl Statuses {
 
         fs::rename(tmp, &self.filename)?;
 
+        let crawl_info = self.filename.with_extension("txt");
         let crawl_time = chrono::Utc::now().naive_utc();
-        let crawl_info = self.filename.with_extension(format!("{:?}", crawl_time));
-        fs::File::create(crawl_info)?;
+        let mut file = fs::File::create(crawl_info)?;
+        write!(file, "{:?}", crawl_time)?;
 
         Ok(())
     }
