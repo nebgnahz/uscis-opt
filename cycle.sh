@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -ex
 
-for n in {0..19}
+for n in {0..9}
 do
     t="$(($1 + ${n} * 100))"
-    cargo run --release ${t}
+    USCIS_URL="http://localhost:8888" cargo run --release ${t}
 done

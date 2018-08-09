@@ -1,14 +1,16 @@
-var cheerio = require('cheerio');
-var request = require('request');
-var async = require('async');
-var stringify = require('csv-stringify');
+const cheerio = require('cheerio');
+const request = require('request');
+const async = require('async');
+
+const querystring = require('querystring');
+const http = require('http');
+const url = require('url');
+
 var URL = 'https://egov.uscis.gov/casestatus/mycasestatus.do?appReceiptNum=RECEIPT_NUM';
 var PREFIX = 'YSC';
 
 var receiptNumbers = [];
 var results = [];
-
-console.log("Start global execution");
 
 exports.handler = function(event, context, callback) {
     receiptNumbers = [];
@@ -16,12 +18,22 @@ exports.handler = function(event, context, callback) {
 
     let start = event.start === undefined ? '1890220001' : event.start;
     let end = event.end === undefined ? '1890220003' : event.end;
-    crawl(parseInt(start), parseInt(end), function(response) {
-        stringify(response, function (err, output) {
+
+    var ip = '';
+    request("https://ipinfo.io",
+        function (err, resp, body) {
             if (err) {
                 console.error(err);
             }
-            callback(null, output);
+            var r = JSON.parse(body);
+            ip = r.ip;
+        }
+    );
+
+    crawl(parseInt(start), parseInt(end), function(response) {
+        callback(null, {
+            'ip': ip,
+            'crawled': response
         });
     });
 };
@@ -59,24 +71,28 @@ function retrieveReceiptNumber(receiptNumber, callback) {
             }
             callback();
         } else {
-            var row = [{
+            var row = {
                 'id': receiptNumber,
                 'title': title,
                 'description': description
-            }];
-            stringify(row, function (err, output) {
-                if (err) {
-                    console.error(err);
-                }
-                results.push(output);
-                callback();
-            });
+            };
+            results.push(row);
+            callback();
         }
     });
 }
 
-var event = {};
-event.start = 1890230006;
-event.end = 1890230008;
-exports.handler(event, null, function(a, b) { console.log(b); });
+// var event = {};
+// event.start = 1890230006;
+// event.end = 1890230008;
+// exports.handler(event, null, function(a, b) { console.log(b); });
 // crawl(189230006, 189230009, console.log);
+
+// a local crawling server which relies on our router
+http.createServer((request, response) => {
+    const query = url.parse(request.url).query;
+    const queryData = querystring.parse(query);
+    exports.handler(queryData, null, function(a, b) {
+        response.end(JSON.stringify(b));
+    });
+}).listen(8888);
