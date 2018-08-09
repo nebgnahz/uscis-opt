@@ -15,6 +15,7 @@ const USPS: &'static str = "Card Was Picked Up By The United States Postal Servi
 const DELIVERED: &'static str = "Card Was Delivered To Me By The Post Office";
 const REJECTED: &'static str = "Case Rejected Because I Sent An Incorrect Fee";
 const REJECTED2: &'static str = "Case Rejected For Incorrect Fee And Form Not Signed";
+const REJECTED3: &'static str = "Case Was Rejected Because It Was Improperly Filed";
 const RETURNED: &'static str =
     "Notice Was Returned To USCIS Because The Post Office Could Not Deliver It";
 const UPDATE: &'static str = "Correspondence Was Received And USCIS Is Reviewing It";
@@ -71,6 +72,7 @@ impl Status {
             DELIVERED => self.delivered = date,
             REJECTED => self.rejected = date,
             REJECTED2 => self.rejected = date,
+            REJECTED3 => self.rejected = date,
             RETURNED => self.returned = date,
             UPDATE => self.update = date,
             RFE => self.rfe = date,
