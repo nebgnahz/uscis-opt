@@ -61,20 +61,20 @@ impl Status {
     }
 
     pub fn update(&mut self, title: &str, description: &str) {
-        let date = parse_date(description).unwrap();
+        let date = parse_date(description).ok();
 
         match title {
-            RECEIVED => self.received = Some(date),
-            PRODUCED => self.produced = Some(date),
-            USPS => self.pickedup = Some(date),
-            MAILED => self.mailed = Some(date),
-            DELIVERED => self.delivered = Some(date),
-            REJECTED => self.rejected = Some(date),
-            REJECTED2 => self.rejected = Some(date),
-            RETURNED => self.returned = Some(date),
-            UPDATE => self.update = Some(date),
-            RFE => self.rfe = Some(date),
-            _ => self.other = Some(date),
+            RECEIVED => self.received = date,
+            PRODUCED => self.produced = date,
+            USPS => self.pickedup = date,
+            MAILED => self.mailed = date,
+            DELIVERED => self.delivered = date,
+            REJECTED => self.rejected = date,
+            REJECTED2 => self.rejected = date,
+            RETURNED => self.returned = date,
+            UPDATE => self.update = date,
+            RFE => self.rfe = date,
+            _ => self.other = date,
         }
 
         if title == DELIVERED {
@@ -86,9 +86,9 @@ impl Status {
 
         self.is_i765 = !is_i130(&description) && !is_i129(&description) && !is_g28(&description);
 
-        if self.last_update.is_some() && date == self.last_update.unwrap() {
+        if self.last_update.is_some() && date.is_some() && date.unwrap() <= self.last_update.unwrap() {
         } else {
-            self.last_update = Some(date);
+            self.last_update = date;
         }
     }
 }
