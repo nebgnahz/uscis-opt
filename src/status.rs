@@ -11,6 +11,7 @@ use INCREMENT;
 const RECEIVED: &'static str = "Case Was Received";
 const PRODUCED: &'static str = "New Card Is Being Produced";
 const MAILED: &'static str = "Card Was Mailed To Me";
+const USPS: &'static str = "Card Was Picked Up By The United States Postal Service";
 const DELIVERED: &'static str = "Card Was Delivered To Me By The Post Office";
 const REJECTED: &'static str = "Case Rejected Because I Sent An Incorrect Fee";
 const REJECTED2: &'static str = "Case Rejected For Incorrect Fee And Form Not Signed";
@@ -25,6 +26,7 @@ pub struct Status {
     pub received: Option<NaiveDate>,
     pub delivered: Option<NaiveDate>,
     pub produced: Option<NaiveDate>,
+    pub pickedup: Option<NaiveDate>,
     pub mailed: Option<NaiveDate>,
     pub returned: Option<NaiveDate>,
     pub rejected: Option<NaiveDate>,
@@ -46,6 +48,7 @@ impl Status {
             received: None,
             produced: None,
             mailed: None,
+            pickedup: None,
             delivered: None,
             returned: None,
             rejected: None,
@@ -63,6 +66,7 @@ impl Status {
         match title {
             RECEIVED => self.received = Some(date),
             PRODUCED => self.produced = Some(date),
+            USPS => self.pickedup = Some(date),
             MAILED => self.mailed = Some(date),
             DELIVERED => self.delivered = Some(date),
             REJECTED => self.rejected = Some(date),
@@ -80,7 +84,7 @@ impl Status {
         let today = chrono::Utc::now().naive_utc().date();
         self.last_crawl = Some(today);
 
-        self.is_i765 = !is_i130(&description);
+        self.is_i765 = !is_i130(&description) && !is_i129(&description) && !is_g28(&description);
 
         if self.last_update.is_some() && date == self.last_update.unwrap() {
         } else {
@@ -150,6 +154,14 @@ impl Statuses {
 
 pub fn is_i130(description: &str) -> bool {
     description.find("I-130").is_some()
+}
+
+pub fn is_g28(description: &str) -> bool {
+    description.find("G-28").is_some()
+}
+
+pub fn is_i129(description: &str) -> bool {
+    description.find("I-129").is_some()
 }
 
 /// Assuming the input has the form "On <Month> <Day>, <Year>, xxx".

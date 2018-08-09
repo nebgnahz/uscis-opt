@@ -17,7 +17,7 @@ fn main() {
         return;
     }
 
-    let dir = format!("{}/{}", env!("CARGO_MANIFEST_DIR"), "raw-data");
+    let dir = format!("{}/{}", env!("CARGO_MANIFEST_DIR"), "data/raw-data");
 
     let prefix = range / uscis::INCREMENT * uscis::INCREMENT;
     let status_file = format!("{}/{}.csv", dir, prefix);
