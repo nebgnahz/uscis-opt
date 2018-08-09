@@ -40,10 +40,12 @@ fn main() {
     let mut statuses = uscis::status::Statuses::new(status_file, range).unwrap();
 
     let proxy_len = proxies.len();
-    rayon::ThreadPoolBuilder::new()
-        .num_threads(proxy_len)
-        .build_global()
-        .unwrap();
+    if proxy_len != 0 {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(proxy_len)
+            .build_global()
+            .unwrap();
+    }
 
     let records: Vec<uscis::Record> = pendings
         .tasks()
