@@ -1,4 +1,4 @@
-.PHONY: upload download server
+.PHONY: upload download crawler
 
 upload:
 	(cd data/raw-data/; ls *.csv | sed 's/^.*/<a href="&">&<\/a><br\/>/' > raw.html)
@@ -7,5 +7,5 @@ upload:
 download:
 	aws s3 sync s3://uscis-opt data
 
-server:
-	(cd node; node .)
+crawler:
+	(cd crawler; node .)
