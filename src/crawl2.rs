@@ -4,7 +4,7 @@ use serde_json;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Response {
-    ip: String,
+    ip: Option<String>,
     crawled: Vec<Record>,
 }
 

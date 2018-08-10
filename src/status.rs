@@ -86,9 +86,15 @@ impl Status {
         let today = chrono::Utc::now().naive_utc().date();
         self.last_crawl = Some(today);
 
-        self.is_i765 = !is_i130(&description) && !is_i129(&description) && !is_g28(&description);
+        self.is_i765 = !is_i130(&description)
+            && !is_i129(&description)
+            && !is_g28(&description)
+            && !is_i601(&description);
 
-        if self.last_update.is_some() && date.is_some() && date.unwrap() <= self.last_update.unwrap() {
+        if self.last_update.is_some()
+            && date.is_some()
+            && date.unwrap() <= self.last_update.unwrap()
+        {
         } else {
             self.last_update = date;
         }
@@ -153,6 +159,10 @@ impl Statuses {
 
         Ok(())
     }
+}
+
+pub fn is_i601(description: &str) -> bool {
+    description.find("I-601").is_some()
 }
 
 pub fn is_i130(description: &str) -> bool {
