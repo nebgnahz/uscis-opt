@@ -20,7 +20,7 @@ const RETURNED: &'static str =
     "Notice Was Returned To USCIS Because The Post Office Could Not Deliver It";
 const UPDATE: &'static str = "Correspondence Was Received And USCIS Is Reviewing It";
 const RFE: &'static str = "Request for Initial Evidence Was Mailed";
-const REJECT4: &'static str = "Decision Notice Mailed";
+const REJECTED4: &'static str = "Decision Notice Mailed";
 
 
 #[derive(Serialize, Deserialize, Debug)]
