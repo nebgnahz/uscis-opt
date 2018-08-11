@@ -12,10 +12,7 @@ extern crate csv;
 
 pub const INCREMENT: u64 = 100;
 
-mod proxy;
-pub use proxy::read_proxy;
-pub use proxy::write_proxy;
-
-pub mod crawl2;
-
+pub mod crawler;
+pub use crawler::crawl;
 pub mod status;
+pub use status::Statuses;

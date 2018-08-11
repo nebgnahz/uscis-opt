@@ -1,10 +1,10 @@
 use chrono;
-use chrono::naive::NaiveDate;
-use crawl2::Record;
+use chrono::naive::{NaiveDate, NaiveDateTime};
+use crawler::Record;
 use csv;
 use std::collections::BTreeMap;
 use std::fs;
-use std::io::{self, Write};
+use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 use INCREMENT;
 
@@ -21,7 +21,6 @@ const RETURNED: &'static str =
 const UPDATE: &'static str = "Correspondence Was Received And USCIS Is Reviewing It";
 const RFE: &'static str = "Request for Initial Evidence Was Mailed";
 const REJECTED4: &'static str = "Decision Notice Mailed";
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Status {
@@ -140,6 +139,18 @@ impl Statuses {
         let id = record.id[3..].parse::<u64>().unwrap();
         let entry = self.statuses.entry(id).or_insert(Status::new(id));
         entry.update(&record.title, &record.description)
+    }
+
+    pub fn last_crawl(&self) -> Option<NaiveDateTime> {
+        let crawl_info = self.filename.with_extension("txt");
+        if let Ok(mut file) = fs::File::open(crawl_info) {
+            let mut contents = String::new();
+            file.read_to_string(&mut contents).unwrap();
+            let tmspec = "%Y-%m-%dT%H:%M:%S%.f";
+            Some(NaiveDateTime::parse_from_str(&contents, tmspec).unwrap())
+        } else {
+            None
+        }
     }
 
     pub fn commit(&self) -> Result<(), io::Error> {

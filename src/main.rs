@@ -1,125 +1,67 @@
+use std::{thread, time};
+
+extern crate chrono;
 extern crate env_logger;
 extern crate uscis;
-extern crate chrono;
+#[macro_use]
+extern crate log;
 
 fn main() {
     env_logger::init();
 
     let args: Vec<String> = std::env::args().collect();
-    if args.len() < 2 {
-        println!("Type range");
+    if args.len() < 3 {
+        println!("Usage: cargo run -- <start> <end>");
         return;
     }
 
-    let range: u64 = args[1].parse().unwrap();
-    if range < 1890200000 || range > 1890500000 {
-        println!("Invalid range");
-        return;
+    let start: u64 = args[1].parse().unwrap();
+    let end: u64 = args[1].parse().unwrap();
+    let start = start / uscis::INCREMENT * uscis::INCREMENT;
+    let end = end / uscis::INCREMENT * uscis::INCREMENT;
+
+    let mut current = start;
+    let one_hour = time::Duration::from_secs(3_600);
+
+    loop {
+        // sleep
+        if current >= end {
+            current = start;
+        }
+
+        current = crawl_one_round(current);
+        thread::sleep(one_hour);
     }
-
-    let dir = format!("{}/{}", env!("CARGO_MANIFEST_DIR"), "data/raw-data");
-
-    let prefix = range / uscis::INCREMENT * uscis::INCREMENT;
-    let status_file = format!("{}/{}.csv", dir, prefix);
-
-    let mut statuses = uscis::status::Statuses::new(status_file, range).unwrap();
-
-    let records = uscis::crawl2::crawl(prefix, prefix + uscis::INCREMENT);
-
-    for r in records {
-        statuses.update(&r);
-    }
-
-    statuses.commit().unwrap();
 }
 
-// extern crate chrono;
-//
-// extern crate rayon;
-// extern crate uscis;
+fn crawl_one_round(mut prefix: u64) -> u64 {
+    let dir = format!("{}/{}", env!("CARGO_MANIFEST_DIR"), "data");
+    let apis = uscis::crawler::read_apis(dir.clone() + "/apis");
 
-// use rayon::prelude::*;
-// use std::collections::HashSet;
+    // we first wake up all APIs by sending small requests to them
+    for api in &apis {
+        uscis::crawler::wakeup(&api);
+    }
 
-// fn _test() {
-//     let args: Vec<String> = std::env::args().collect();
-//     println!("{:?}", uscis::crawl(1890200001, Some((&args[1], 0))));
-// }
+    // we then crawl the next set of tasks
+    'outer: for api in apis {
+        for _i in 0..20 {
+            let status_file = format!("{}/raw-data/{}.csv", dir, prefix);
+            let mut statuses = uscis::Statuses::new(status_file, prefix).unwrap();
+            let records = uscis::crawl(&api, prefix, prefix + uscis::INCREMENT);
 
-// fn main() {
-//     env_logger::init();
+            if records.len() != 0 {
+                for r in records {
+                    statuses.update(&r);
+                }
+                statuses.commit().unwrap();
+                prefix += uscis::INCREMENT;
+            } else {
+                warn!("Crawling endpoint {} is not working properly", api);
+                continue 'outer;
+            }
+        }
+    }
 
-//     let args: Vec<String> = std::env::args().collect();
-//     if args.len() < 2 {
-//         println!("Type range");
-//         return;
-//     }
-
-//     let range: u64 = args[1].parse().unwrap();
-//     if range < 1890200000 || range > 1890500000 {
-//         println!("Invalid range");
-//         return;
-//     }
-
-//     let prefix = range / uscis::INCREMENT * uscis::INCREMENT;
-
-//     let dir = format!("{}/{}", env!("CARGO_MANIFEST_DIR"), "data");
-
-//     let proxy_file = format!("{}/{}", dir, "proxy-list");
-//     let proxies = uscis::read_proxy(&proxy_file);
-
-//     let proxy_len = proxies.len();
-//     if proxy_len != 0 {
-//         rayon::ThreadPoolBuilder::new()
-//             .num_threads(proxy_len)
-//             .build_global()
-//             .unwrap();
-//     }
-
-//     let records: Vec<uscis::Record> = pendings
-//         .tasks()
-//         .par_iter()
-//         .map(|&i| {
-//             let proxy = if proxy_len == 0 {
-//                 None
-//             } else {
-//                 let idx = i as usize % proxy_len;
-//                 Some((&proxies[idx], idx))
-//             };
-
-//             uscis::crawl(i, proxy)
-//         })
-//         .filter_map(|r| r.ok())
-//         .collect();
-
-//     let mut good_proxies = HashSet::new();
-//     for r in records {
-//         statuses.update(&r);
-
-//         if r.title == "Card Was Delivered To Me By The Post Office" {
-//             pendings.set_done(r.id);
-//         }
-
-//         if !r.is_i765 {
-//             pendings.set_non_i765(r.id);
-//         }
-
-//         pendings.set_crawl(r.id, r.crawl_time.date());
-
-//         if let Some(proxy) = r.proxy {
-//             good_proxies.insert(proxy);
-//         }
-//     }
-
-//     let updated_proxies: Vec<&String> = proxies
-//         .iter()
-//         .enumerate()
-//         .filter(|(i, _)| good_proxies.get(&i).is_some())
-//         .map(|(_, p)| p)
-//         .collect();
-
-//     println!("{:?}", updated_proxies);
-//     uscis::write_proxy(&updated_proxies, proxy_file);
-//     pendings.commit().expect("failed to commit pending");
-//     statuses.commit().unwrap();
-// }
+    return prefix;
+}
