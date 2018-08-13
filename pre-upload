@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+pushd .
+cd data/raw-data/
+
+ls *.csv | sed 's/^.*/<a href="&">&<\/a><br\/>/' > raw.html
+ls *.txt | cut -d'.' -f 1 > tmp1
+ls *.txt | while read i; do echo `cat $i`; done > tmp2
+
+echo 'sequence,crawl_date' > crawl_info.csv
+paste -d, tmp1 tmp2 >> crawl_info.csv
+rm -f tmp1 tmp2
+popd

@@ -1,7 +1,7 @@
 .PHONY: upload download crawler
 
 upload:
-	(cd data/raw-data/; ls *.csv | sed 's/^.*/<a href="&">&<\/a><br\/>/' > raw.html)
+	./pre-upload
 	aws s3 sync data s3://uscis-opt
 
 download:
