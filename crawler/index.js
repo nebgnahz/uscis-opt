@@ -82,17 +82,20 @@ function retrieveReceiptNumber(receiptNumber, callback) {
     });
 }
 
-// var event = {};
-// event.start = 1890230006;
-// event.end = 1890230008;
-// exports.handler(event, null, function(a, b) { console.log(b); });
-// crawl(189230006, 189230009, console.log);
+function test_with_lambda_api() {
+    var event = {};
+    event.start = 1890230006;
+    event.end = 1890230008;
+    exports.handler(event, null, function(a, b) { console.log(b); });
+    crawl(189230006, 189230009, console.log);
+}
 
-// a local crawling server which relies on our router
+// running a local crawling server (or use Heroku's PORT)
+var port = process.env.PORT || 8888;
 http.createServer((request, response) => {
     const query = url.parse(request.url).query;
     const queryData = querystring.parse(query);
     exports.handler(queryData, null, function(a, b) {
         response.end(JSON.stringify(b));
     });
-}).listen(8888);
+}).listen(port);
