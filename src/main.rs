@@ -16,21 +16,22 @@ fn main() {
     }
 
     let start: u64 = args[1].parse().unwrap();
-    let end: u64 = args[1].parse().unwrap();
+    let end: u64 = args[2].parse().unwrap();
     let start = start / uscis::INCREMENT * uscis::INCREMENT;
     let end = end / uscis::INCREMENT * uscis::INCREMENT;
 
     let mut current = start;
-    let one_hour = time::Duration::from_secs(3_600);
+    let sleep_time = time::Duration::from_secs(60 * 45);
 
     loop {
-        // sleep
         if current >= end {
             current = start;
         }
 
         current = crawl_one_round(current);
-        thread::sleep(one_hour);
+        trace!("sleeping");
+        thread::sleep(sleep_time);
+        trace!("wake up and work on {}, until {}", current, end);
     }
 }
 

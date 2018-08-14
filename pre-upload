@@ -13,6 +13,6 @@ rm -f tmp1 tmp2
 
 awk 'FNR==1 && NR!=1{next;}{print}' 1890*.csv > all.csv
 DATE=`date +%Y-%m-%d`
-xsv search -s produced $DATE all.csv | xsv select id > today.csv
+xsv search -s produced $DATE all.csv | xsv select id > produced-$DATE.csv
 
 popd

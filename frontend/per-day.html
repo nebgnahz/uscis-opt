@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.5.0/d3.min.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-123738707-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-123738707-1');
+    </script>
+  </head>
+  <body>
+    <script type="text/javascript">
+      function getUrlParams() {
+          var vars = {};
+          var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,
+                                                   function(m, key, value) {
+              vars[key] = value;
+          });
+          return vars;
+      }
+
+      function generateUrl() {
+          var date = document.getElementById("date").value;
+          var base = window.location.protocol + "//" +
+              window.location.host + window.location.pathname;
+          var url = base + "?date=" + date;
+          d3.select('#url').html(url);
+      }
+
+      window.onload= function(){
+          var date_input = document.getElementById("date");
+
+          const params = getUrlParams();
+          if (params.date != undefined) {
+              date_input.defaultValue = params.date;
+          } else {
+              let today = (new Date()).toISOString().substr(0, 10);
+              date_input.defaultValue = today;
+          }
+          update()
+      }
+
+      function update() {
+          var date_input = document.getElementById("date");
+          getPerDayInfo(date_input.value)
+              .catch((err) => {
+                  alert("not available for " + date_input.value);
+              });
+      }
+    </script>
+    Histogram of "New Card is Being Produced" for
+    <input type="date" value="" id="date">
+    <button onclick="update()">Change Date</button>
+    <button onclick="generateUrl()">Generate URL</button>
+    <br/>
+    On this day, USCIS has produced <span id="num_processed"></span> cards.
+    <a href="freshness.html">How fresh is this result?</a>
+
+    <br/><br/>
+    <div id="url"></div>
+    <a href="index.html"><button href="index.html">Back to Raw Data</button></a>
+    <a href="raw.html"><button href="raw.html">Download Individual CSV File</button></a>
+
+    <br/>
+    <br/>
+    <br/>
+    <div id="today"></div>
+
+    <script>
+    </script>
+    <script type="text/javascript" charset="utf-8">
+      async function getPerDayInfo(date) {
+          const data = await d3.csv('../raw-data/' + 'produced-' + date + '.csv')
+          const sequences = data.map(
+              (d) => parseInt(d.id) - 1890000000
+          );
+
+          d3.select("#num_processed").text(sequences.length);
+
+          var trace = {
+              x: sequences,
+              type: 'histogram',
+          };
+          var to_plot = [trace];
+
+          var ticks = [];
+          for (var i = sequences[0]; i < sequences[sequences.length - 1]; i += 1000) {
+              ticks.push(Math.floor(i / 1000) * 1000);
+          }
+
+          var layout = {
+              xaxis: {
+                  tickvals: ticks,
+                  ticktext: ticks.map((i) => '1890' + i.toString()),
+              },
+          };
+          Plotly.newPlot('today', to_plot, layout);
+      }
+    </script>
+  </body>
+</html>
