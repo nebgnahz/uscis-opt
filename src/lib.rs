@@ -34,7 +34,8 @@ pub fn read_current() -> Option<u64> {
 
 pub fn write_current(current: u64) {
     let filename = format!("{}/progress", env!("CARGO_MANIFEST_DIR"));
-    let mut f = File::open(filename).expect("progress file not found");
+    let mut f = File::open(&filename)
+        .unwrap_or_else(|_| File::create(&filename).expect("failed to create progress file"));
     write!(f, "{}", current).expect("something went wrong writing progress file");
 }
 

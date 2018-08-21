@@ -55,8 +55,7 @@ fn crawl_one_day(start: u64, end: u64) {
             break;
         }
 
-        let next = crawl_one_round(current);
-        uscis::write_current(next);
+        crawl_one_round(current);
 
         trace!("sleeping");
         let sleep_time = time::Duration::from_secs(60 * 45);
@@ -86,6 +85,8 @@ fn crawl_one_round(mut prefix: u64) -> u64 {
                 }
                 statuses.commit().unwrap();
                 prefix += uscis::INCREMENT;
+
+                uscis::write_current(prefix);
             } else {
                 warn!("Crawling endpoint {} is not working properly", api);
                 continue 'outer;
