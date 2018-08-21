@@ -6,6 +6,8 @@ extern crate uscis;
 #[macro_use]
 extern crate log;
 
+use chrono::Timelike;
+
 fn main() {
     env_logger::init();
 
@@ -20,18 +22,45 @@ fn main() {
     let start = start / uscis::INCREMENT * uscis::INCREMENT;
     let end = end / uscis::INCREMENT * uscis::INCREMENT;
 
-    let mut current = start;
-    let sleep_time = time::Duration::from_secs(60 * 45);
+    let work_hour = 5; // 5 AM UTC is 10 PM PST
 
     loop {
-        if current >= end {
-            current = start;
+        let now = chrono::offset::Utc::now();
+        let now = now.hour();
+
+        if now == work_hour {
+            // we only work at 4am UTC (9pm PST)
+            info!("starting to crawl at {:?}", now);
+            crawl_one_day(start, end);
+        } else {
+            let sleep_hour = if now < work_hour {
+                work_hour - now
+            } else {
+                work_hour + 24 - now
+            };
+            let t = time::Duration::from_secs(60 * 60 * sleep_hour as u64);
+            info!("now is {}, need to sleep for {} hours", now, sleep_hour);
+            thread::sleep(t);
+        }
+    }
+}
+
+fn crawl_one_day(start: u64, end: u64) {
+    loop {
+        let current = uscis::read_current().unwrap_or(start);
+        trace!("wake up and work on {}, until {}", current, end);
+
+        if current > end {
+            uscis::remove_current();
+            break;
         }
 
-        current = crawl_one_round(current);
+        let next = crawl_one_round(current);
+        uscis::write_current(next);
+
         trace!("sleeping");
+        let sleep_time = time::Duration::from_secs(60 * 45);
         thread::sleep(sleep_time);
-        trace!("wake up and work on {}, until {}", current, end);
     }
 }
 
