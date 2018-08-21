@@ -17,7 +17,7 @@ pub use crawler::crawl;
 pub mod status;
 pub use status::Statuses;
 
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 
 pub fn read_current() -> Option<u64> {
@@ -34,9 +34,11 @@ pub fn read_current() -> Option<u64> {
 
 pub fn write_current(current: u64) {
     let filename = format!("{}/progress", env!("CARGO_MANIFEST_DIR"));
-    let mut f = File::open(&filename)
+    let mut file = OpenOptions::new()
+        .write(true)
+        .open(&filename)
         .unwrap_or_else(|_| File::create(&filename).expect("failed to create progress file"));
-    write!(f, "{}", current).expect("something went wrong writing progress file");
+    write!(file, "{}", current).expect("something went wrong writing progress file");
 }
 
 pub fn remove_current() {
