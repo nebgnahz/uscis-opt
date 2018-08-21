@@ -46,7 +46,7 @@ fn crawl_one_round(mut prefix: u64) -> u64 {
 
     // we then crawl the next set of tasks
     'outer: for api in apis {
-        for _i in 0..20 {
+        for _i in 0..25 {
             let status_file = format!("{}/raw-data/{}.csv", dir, prefix);
             let mut statuses = uscis::Statuses::new(status_file, prefix).unwrap();
             let records = uscis::crawl(&api, prefix, prefix + uscis::INCREMENT);

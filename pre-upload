@@ -11,8 +11,17 @@ echo 'sequence,crawl_date' > crawl_info.csv
 paste -d, tmp1 tmp2 >> crawl_info.csv
 rm -f tmp1 tmp2
 
-awk 'FNR==1 && NR!=1{next;}{print}' 1890*.csv > all.csv
+awk 'FNR==1 && NR!=1{next;}{print}' 18902*.csv > all.csv
+
+xsv select produced,mailed,delivered all.csv \
+ | xsv frequency \
+ | xsv sort -s value \
+ | xsv sort -s field \
+ | xsv search -s value "2018*" > stat.csv
+
 DATE=`date +%Y-%m-%d`
 xsv search -s produced $DATE all.csv | xsv select id > produced-$DATE.csv
+YESTERDAY=$(date -d "-1 days" +%Y-%m-%d)
+xsv search -s produced $YESTERDAY all.csv | xsv select id > produced-$YESTERDAY.csv
 
 popd

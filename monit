@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+while true
+do
+RUST_LOG=uscis=trace RUST_BACKTRACE=1 cargo run --release 1890200000 1890300000 2> >(tee stderr.log >&2)
+sleep 3600
+done
