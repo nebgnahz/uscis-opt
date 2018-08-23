@@ -1,6 +1,25 @@
 #!/usr/bin/env bash
+
+start=1890220000
+end=1890330000
+
 while true
 do
-RUST_LOG=uscis=trace RUST_BACKTRACE=1 cargo run --release 1890200000 1890300000 2> >(tee stderr.log >&2)
-sleep 3600
+    hour=`TZ=America/Los_Angeles date +"%H"`
+    if [[ $hour -eq 22 ]];
+    then
+        echo "Time to start another day's crawling"
+        echo -n $start > progress
+        while true
+        do
+            if [ ! -f progress ];
+            then
+               break
+            fi
+            echo "crawling"
+            RUST_LOG=uscis=trace RUST_BACKTRACE=1 cargo run --release -- ${end} 2> >(tee stderr.log >&2)
+        done
+    else
+        sleep 3600
+    fi
 done
