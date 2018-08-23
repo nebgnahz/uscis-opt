@@ -10,14 +10,14 @@ USCIS OPT Crawler, Analyzer, and Visualizer
 - [Backend/Storage with AWS](Makefile)
 - [Visualization](frontend)
 
-### Deployment:
+### Deployment
 
 - Crawler on Heroku (dynamic IP)
 - Scheduler on a low-end box
 
-### Gallery:
+---
 
-USCIS OPT Progress: Crawler and Tracker
+### Gallery
 
 <a href="http://uscis-opt.s3-website-us-west-1.amazonaws.com/vis/query.html">
 <p>What is the current status for a range?</p>
@@ -37,8 +37,4 @@ USCIS OPT Progress: Crawler and Tracker
 <a href="http://uscis-opt.s3-website-us-west-1.amazonaws.com/vis/trend.html">
 <p>I want to track a particular range!</p>
 <img src="frontend/trend.png" width="400" />
-</a>
-
-<a href="http://uscis-opt.s3-website-us-west-1.amazonaws.com/raw-data/raw.html">
-Can I get your raw data? Yes!
 </a>
