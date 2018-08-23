@@ -25,20 +25,10 @@ range_input.addEventListener("keyup", (event) => {
     }
 });
 
-function query() {
-    var num = parseInt(document.getElementById("num").value);
-    var range = parseInt(document.getElementById("range").value);
-
-    var url = window.location.protocol + "//" + window.location.host +
-        "/vis/query.html" +
-        "?num=" + num + "&count=" + range;
-    window.location.href = url;
-}
-
 function getStatus(i) {
     for (const [key, value] of Object.entries(i)) {
         if (key != 'last_update' && key != 'last_crawl' &&
-            value == i['last_update']) {
+            i['last_update'] != "" && value == i['last_update']) {
             return key;
         }
     }
@@ -51,6 +41,16 @@ function csv_file(i) {
 
 function txt_file(i) {
     return "../raw-data/" + i + ".txt";
+}
+
+function query() {
+    var num = parseInt(document.getElementById("num").value);
+    var range = parseInt(document.getElementById("range").value);
+
+    var url = window.location.protocol + "//" + window.location.host +
+        "/vis/query.html" +
+        "?num=" + num + "&count=" + range;
+    window.location.href = url;
 }
 
 function update() {
