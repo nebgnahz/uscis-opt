@@ -63,7 +63,7 @@
           const time_diffs = data.map((d) => {
               const crawl_time = new Date(Date.parse(d.crawl_date + "+0000"));
               const now = new Date();
-              return (now - crawl_time) / 36e5 / 24;
+              return (now - crawl_time) / 36e5;
           });
           var chart = c3.generate({
               bindto: '#freshness',
@@ -94,7 +94,7 @@
                   },
                   y: {
                       label: {
-                          text: 'Days Since Last Crawl',
+                          text: 'Hours Since Last Crawl',
                           position: 'outer-middle',
                       },
                   },

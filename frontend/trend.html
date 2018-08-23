@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta charset="utf-8">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.5.0/d3.min.js"></script>
+    <script src="lib.js"></script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-123738707-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-123738707-1');
+    </script>
+  </head>
+  <body>
+    YSC Number: <input type="number"
+                       value="1890230000" id="num"
+                       name="num">
+    Count: <input type="number" min="100" max="3000"
+                  value="1000" id="range"
+                  name="num">
+    <button type="button" onclick="update()">Look Up</button>
+    <button onclick="generateUrl()">Generate URL for Query</button>
+    <button onclick="query()">See Raw Data</button>
+    <a href="index.html"><button href="index.html">Back to Main Page</button></a>
+    <br/>
+    <br/>
+
+    <div id="url"></div>
+    <div id="trend"></div>
+
+    <br/>
+    <br/>
+
+    <script type="text/javascript" src="trend.js"></script>
+  </body>
+</html>

@@ -34,17 +34,43 @@
           d3.select('#url').html(url);
       }
 
-      window.onload= function(){
+      window.onload = function(){
           var date_input = document.getElementById("date");
 
           const params = getUrlParams();
           if (params.date != undefined) {
               date_input.defaultValue = params.date;
           } else {
-              let today = (new Date()).toISOString().substr(0, 10);
+              let date = new Date();
+              date.setDate(date.getDate() - 1);
+              let today = date.toISOString().substr(0, 10);
               date_input.defaultValue = today;
           }
           update()
+      }
+
+      function yesterday() {
+          var date_input = document.getElementById("date");
+          var date = new Date(date_input.value);
+          date.setDate(date.getDate() - 1);
+          let day = date.toISOString().substr(0, 10);
+          date_input.value = day;
+          getPerDayInfo(date_input.value)
+              .catch((err) => {
+                  alert("not available for " + date_input.value);
+              });
+      }
+
+      function tomorrow() {
+          var date_input = document.getElementById("date");
+          var date = new Date(date_input.value);
+          date.setDate(date.getDate() + 1);
+          let day = date.toISOString().substr(0, 10);
+          date_input.value = day;
+          getPerDayInfo(date_input.value)
+              .catch((err) => {
+                  alert("not available for " + date_input.value);
+              });
       }
 
       function update() {
@@ -58,6 +84,8 @@
     Histogram of "New Card is Being Produced" for
     <input type="date" value="" id="date" min="2018-08-13">
     <button onclick="update()">Change Date</button>
+    <button onclick="yesterday()">Previous Day</button>
+    <button onclick="tomorrow()">Next Day</button>
     <button onclick="generateUrl()">Generate URL</button>
     <br/>
     On this day, USCIS has produced <span id="num_processed"></span> cards (Yes, I know, yours may not be included...)
@@ -67,7 +95,7 @@
     <br/><br/>
     <div id="url"></div>
     <a href="index.html"><button href="index.html">Back to Raw Data</button></a>
-    <a href="raw.html"><button href="raw.html">Download Individual CSV File</button></a>
+    <a href="raw.html"><button href="../raw-data/raw.html">Download Individual CSV File</button></a>
 
     <br/>
     <br/>
@@ -87,6 +115,11 @@
 
           var trace = {
               x: sequences,
+              xbins: {
+                  start: 200000,
+                  end: 300000,
+                  size: 1000,
+              },
               type: 'histogram',
           };
           var to_plot = [trace];
