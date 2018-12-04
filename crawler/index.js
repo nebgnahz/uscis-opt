@@ -44,7 +44,7 @@ function crawl(start, end, callback) {
         receiptNumbers.push(PREFIX + i);
     }
 
-    async.eachLimit(receiptNumbers, 100, retrieveReceiptNumber, function (err) {
+    async.eachLimit(receiptNumbers, 10, retrieveReceiptNumber, function (err) {
         if (err) {
             console.error(err);
         }
